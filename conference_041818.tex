@@ -19,6 +19,7 @@
 \usepackage{subcaption}
 
 \usepackage{float}
+\usepackage[shortlabels]{enumitem}
 
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -79,7 +80,7 @@
 		\textit{\textit{Autonomus Car }atau kendaraan otonom merupakan kendaraan yang memiliki kemampuan untuk berkendara secara mandiri layaknya dikendalikan manusia dengan mengunakan rangkaian kecerdasan buatan. Pada penelitian ini kami mengajukan riset pengembangan kendaraan otonom iCar ITS (\textit{Intelligent Car }Institut Teknologi Sepuluh Nopember) dengan mengembangkan sistem manuver kendaraan otonom di bundaran atau u-turn dalam lingkungan yang disimulasikan. Dalan lingkungan simulasi, model yang digunakan adalah model kendaraan yang disesuaikan dengan iCar. Pengembangan sistem navigasi dan manuver kendaraan otonom dilakukan menggunakan metode \textit{Deep Reinforcement Learning}, salah satu cabang dari \textit{Machine Learning}. Pada penelitian ini, didapatkan hasil model reinforcement learning yang mampu melakukan manuver bundaran simpang empat dan bundaran tanpa simpang dengan nilai rerata deviasi sudut dari jalurnya masing-masing senilai 27.011° dan 30.068°, mampu bermanuver tanpa \textit{collision} selama rerata 13.3 detik dan 7.9 detik, serta dengan kecepatan rerata 27.0 kmpj dan 28.5 kmpj.}
 	\end{abstract}
 	\begin{IEEEkeywords}
-		\textit{Kendaraan otonom, Reinforcement Learning, Simulasi}
+		\textit{Kendaraan otonom, Reinforcement Learning, Deep Learning, Simulasi}
 	\end{IEEEkeywords}
 	
 	\section{Latar Belakang}
@@ -168,7 +169,7 @@ Citra segmentasi grayscale dan citra segmentasi lanjutan akan menjadi hasil akhi
 \label{sec:action}
 Ada 3 \textit{action} yang bisa dilakukan oleh \textit{agent}. Diantaranya:
 
-\begin{enumerate}[nolistsep]
+\begin{enumerate}
 	\item \verb=forward=
 	
 	\textit{Agent} \textit{throttle} dengan nilai 1 dan \textit{steer} dengan nilai 0. Dengan demikian agent akan melakukan gerakan manuver maju.
@@ -188,7 +189,7 @@ Ada 3 \textit{action} yang bisa dilakukan oleh \textit{agent}. Diantaranya:
 
 Fungsi reward dirancang agar mobil otonom mampu bergerak sepanjang lintasan dengan cepat dan aman.
 
-\subsubsection{Bundaran Simpang Empat}Ada dua buah reward yang ditetapkan dimana masing-masing reward memperhatikan referensi \textit{target lane}. Target lane adalah garis imajiner yang menjadi target gerakan mobil otonom. Terlihat pada Gambar \ref{fig:target_lane_line}, \textit{target lane} digambarkan dengan titik-titik merah di sekitar bundaran.
+\subsubsection{Bundaran Simpang Empat}Ada empat buah reward yang ditetapkan. Masing-masing reward memperhatikan referensi \textit{target lane}. Target lane adalah garis imajiner yang menjadi target gerakan mobil otonom. Terlihat pada Gambar \ref{fig:target_lane_line}, \textit{target lane} digambarkan dengan titik-titik merah di sekitar bundaran.
 
 \begin{figure}[H] 
 	\centering
@@ -197,7 +198,7 @@ Fungsi reward dirancang agar mobil otonom mampu bergerak sepanjang lintasan deng
 	\label{fig:target_lane_line}
 \end{figure}
 
-\begin{enumerate}
+\begin{enumerate}[a)]
 \item \textit{Reward} 1: Deviasi sudut dari \textit{target lane}
 Reward yang digunakan pada Reward 1 adalah 1/alpha. Alpha adalah sudut agent yang menyimpang dari \textit{target lane}. Teknis alpha dijelaskan pada Gambar \ref{fig:reward_anglediff_sketch}. 
 
@@ -256,6 +257,9 @@ Pada bundaran tanpa simpang, fungsi reward yang diberikan berbeda. Pada kasus in
 
 \textit{Waypoint} merupakan titik-titik pada map sebagai target tujuan jalannya \textit{agent}. Terlihat pada Gambar \ref{fig:waypoint}, titik-titik merah merupakan ilustrasi dari waypoint. Waypoint berjumlah 100 titik dimana setiap titiknya berjarak satu meter.
 
+\begin{enumerate}[a)]
+\item \textit{Reward} 1: Deviasi sudut dari \textit{waypoint}
+
 Reward didefinisikan dengan 1/alpha. Alpha merupakan deviasi sudut arah \textit{agent }terhadap arah titik \textit{waypoint} terdekat dari \textit{agent} + 5.
 
 \begin{figure}[H] 
@@ -276,8 +280,16 @@ Gambar \ref{fig:waypoint_fromside} menunjukkan bahwa \textit{waypoint} terdekat 
 
 Ilustrasi fungsi reward dapat dilihat pada Gambar \ref{fig:reward_alpha}, dimana titik-titik hijau adalah \textit{waypoints}, garis merah adalah arah dari \textit{agent}, garis hitam adalah arah dari \textit{agent} ke \textit{waypoint}+5 dari \textit{agent}, serta alpha adalah perbedaan sudut dari kedua nilai sudut tersebut. Nilai tertinggi reward dibatasi menjadi 1. Hal ini dilakukan agar fluktuasi reward yang diberikan ke agent juga tidak terlalu tinggi untuk perubahan nilai yang kecil, seperti pada Reward 1 dan Reward 2 pada bundaran simpang empat.
 
+\item{\textit{Reward} 3: Sentuhan dengan obyek lain}
+Reward senilai -1 akan diberikan pada \textit{agent} jika agent menyentuh obyek lain selain jalan raya, tanah, dan trotoar.
 
-\subsubsection{End Episode}
+\item{\textit{Reward }Total}
+Total nilai reward didefinisikan dengan Reward 1 + Reward 2.
+
+\end{enumerate}
+
+
+\subsection{End Episode}
 \label{sec:end_episode}
 Waktu maksimal yang diberikan pada agent untuk melakukan proses learning setiap episodenya adalah 10 detik.
 
@@ -450,7 +462,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	Hasil dari proses training tersebut adalah model jaringan DQN yang merepresentasikan sistem perencanaan gerakan mobil otonom. Model tersebut disimpan dalam sebuah file berformat .model yang
 	selanjutnya dapat divisualisasikan dengan tensorboard untuk melihat hasil training algoritma DQN. 
 	
-	\subsection{Training DQN pada Bundaran Simpang Empat dengan Segmentasi Grayscale}
+	\subsubsection{Training DQN pada Bundaran Simpang Empat dengan Segmentasi Grayscale}
 	\label{sec:training_dqn_bundaran_simpangempat_segmentasi_grayscale}
 	
 	Training algoritma DQN pada bundaran simpang empat dengan segmentasi grayscale berlangsung selama 20 jam. Berikut adalah hasil visualisasi training algoritma DQN:
@@ -464,7 +476,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	
 	Dari hasil visualisasi training DQN pada Gambar \ref{fig:tensorboard_bundaran_simpangempat_segmentasi_grayscale}, dapat dilihat bahwa proses training algoritma DQN telah berjalan dengan baik. Hal itu dapat dilihat dari nilai akurasi, episode time, dan reward berkendara mobil otonom yang mengalami tren kenaikan seiring dengan berjalannya proses training.
 	
-	\subsection{Training DQN pada Bundaran Simpang Empat dengan Segmentasi Lanjutan}
+	\subsubsection{Training DQN pada Bundaran Simpang Empat dengan Segmentasi Lanjutan}
 	\label{sec:training_dqn_bundaran_simpangempat_segmentasi_hitam_putih}
 	
 	Training algoritma DQN pada bundaran simpang empat dengan segmentasi lanjutan berlangsung selama 13 jam, 30 menit, dan 48 detik. Berikut adalah hasil visualisasi training algoritma DQN:
@@ -479,7 +491,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	Dari hasil visualisasi training DQN pada Gambar \ref{fig:tensorboard_bundaran_tanpasimpang_segmentasi_lanjutan}, dapat dilihat bahwa proses training algoritma DQN telah berjalan dengan baik. Hal itu dapat dilihat dari nilai akurasi, episode time, dan reward berkendara mobil otonom yang mengalami tren kenaikan seiring dengan berjalannya proses training.
 	
 	
-	\subsection{Training DQN pada Bundaran Tanpa Simpang dengan Segmentasi Lanjutan}
+	\subsubsection{Training DQN pada Bundaran Tanpa Simpang dengan Segmentasi Lanjutan}
 	\label{sec:training_dqn_bundaran_nosimpang_segmentasi_hitam_putih}
 	
 	Training algoritma DQN pada bundaran tanpa simpang dengan segmentasi lanjutan berlangsung selama 26 jam dan 25 detik. Berikut adalah hasil visualisasi training algoritma DQN:
@@ -557,12 +569,12 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	
 	\fi
 	
-	\section{Pengujian Model DQN}
+	\subsection{Pengujian Model DQN}
 	\label{sec:pengujian_model_dqn}
 	
 	Pada bagian ini, akan dilakukan pengujian model hasil dari proses training DQN. Pengujian dilakukan saat lingkungan berkendara dalam kondisi normal.
 	
-	\subsection{Pengujian Model DQN pada Bundaran Simpang Empat dengan Segmentasi Grayscale}
+	\subsubsection{Pengujian Model DQN pada Bundaran Simpang Empat dengan Segmentasi Grayscale}
 	\label{sec:pengujian_dqn_bundaran_simpangempat_segmentasi_grayscale}
 	
 	% Please add the following required packages to your document preamble:
@@ -626,7 +638,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	
 	
 	
-	\subsection{Pengujian Model DQN pada Bundaran Simpang Empat dengan Segmentasi Lanjutan}
+	\subsubsection{Pengujian Model DQN pada Bundaran Simpang Empat dengan Segmentasi Lanjutan}
 	\label{sec:pengujian_dqn_bundaran_simpangempat_segmentasi_hitam_putih}
 	
 	\begin{table}[H]
@@ -687,7 +699,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 		\label{tb:kesimpulan_bunderan_segmented}
 	\end{table}
 	
-	\subsection{Pengujian Model DQN pada Bundaran Tanpa Simpang dengan Segmentasi Lanjutan}
+	\subsubsection{Pengujian Model DQN pada Bundaran Tanpa Simpang dengan Segmentasi Lanjutan}
 	\label{sec:pengujian_dqn_bundaran_nosimpang_segmentasi_hitam_putih}
 	
 	\begin{table}[H]
@@ -753,7 +765,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	
 	Dari perancangan dan pengujian sistem yang telah dilakukan, diperoleh beberapa kesimpulan sebagai berikut. Kendala dan kekurangan yang penulis hadapi juga penulis tuliskan pada bagian saran dengan harapan untuk membantu pengembangan penelitian selanjutnya.
 	
-	\begin{enumerate}[nolistsep]
+	\begin{enumerate}
 		
 		\item Sistem perencanaan gerakan mobil otonom berbasis algoritma DQN yang dirancang mampu melakukan akselerasi dan \textit{steer} yang mampu mengontrol mobil otonom dan memahami kondisi sekitarnya.
 		
@@ -766,7 +778,7 @@ Proses training dilakukan setelah seluruh konfigurasi selesai dilakukan. Metodol
 	
 	Untuk pengembangan selanjutnya pada topik penelitian perencanaan gerakan mobil otonom dengan menggunakan algoritma DQN, terdapat beberapa saran yang diberikan, antara lain sebagai berikut:
 	
-	\begin{enumerate}[nolistsep]
+	\begin{enumerate}
 		
 		\item Sensor yang digunakan untuk navigasi dari \textit{agent }menggunakan algoritma DQN dapat ditambah menjadi lebih banyak seperti GPS serta LIDAR, agar \textit{agent} dapat bertindak dengan parameter yang lebih lengkap.
 		
